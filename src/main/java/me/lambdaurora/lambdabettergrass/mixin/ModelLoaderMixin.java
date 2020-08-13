@@ -10,11 +10,11 @@
 package me.lambdaurora.lambdabettergrass.mixin;
 
 import com.google.gson.JsonObject;
-import me.lambdaurora.lambdabettergrass.metadata.LBGLayerType;
+import me.lambdaurora.lambdabettergrass.metadata.LBGMetadata;
 import me.lambdaurora.lambdabettergrass.metadata.LBGState;
+import me.lambdaurora.lambdabettergrass.model.LBGUnbakedModel;
 import net.minecraft.client.render.model.ModelLoader;
 import net.minecraft.client.render.model.UnbakedModel;
-import net.minecraft.client.render.model.json.ModelVariantMap;
 import net.minecraft.client.util.ModelIdentifier;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
@@ -28,12 +28,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
 @Mixin(ModelLoader.class)
-public abstract class ModelLoaderMixin
+public class ModelLoaderMixin
 {
     @Shadow
     @Final
@@ -47,31 +46,12 @@ public abstract class ModelLoaderMixin
     @Final
     private ResourceManager resourceManager;
 
-    @Shadow
-    public abstract UnbakedModel getOrLoadModel(Identifier id);
-
-    @Shadow
-    @Final
-    private ModelVariantMap.DeserializationContext variantMapDeserializationContext;
-
-    private boolean lbg_firstLoad = true;
-
     @Inject(method = "putModel", at = @At("HEAD"), cancellable = true)
     private void onPutModel(Identifier id, UnbakedModel unbakedModel, CallbackInfo ci)
     {
         if (id instanceof ModelIdentifier) {
             ModelIdentifier modelId = (ModelIdentifier) id;
             if (!modelId.getVariant().equals("inventory")) {
-                if (this.lbg_firstLoad) {
-                    LBGState.reset();
-                    LBGLayerType.reset();
-                    Collection<Identifier> layerTypes = this.resourceManager.findResources("bettergrass/layer_types", path -> path.endsWith(".json"));
-                    for (Identifier layerTypeId : layerTypes) {
-                        LBGLayerType.load(layerTypeId, this.resourceManager);
-                    }
-                    this.lbg_firstLoad = false;
-                }
-
                 Identifier stateId = new Identifier(modelId.getNamespace(), "bettergrass/states/" + modelId.getPath());
 
                 // Get cached states metadata.
@@ -83,7 +63,7 @@ public abstract class ModelLoaderMixin
                     if (this.resourceManager.containsResource(stateResourceId)) {
                         try {
                             JsonObject json = (JsonObject) LambdaConstants.JSON_PARSER.parse(new InputStreamReader(this.resourceManager.getResource(stateResourceId).getInputStream()));
-                            state = LBGState.getOrLoadMetadataState(stateId, this.resourceManager, json, this.variantMapDeserializationContext);
+                            state = new LBGState(stateId, resourceManager, json);
                         } catch (IOException e) {
                             // Ignore.
                         }
@@ -92,9 +72,10 @@ public abstract class ModelLoaderMixin
 
                 // If states metadata found, search for corresponding metadata and if exists replace the model.
                 if (state != null) {
-                    UnbakedModel newModel = state.getCustomUnbakedModel(modelId, unbakedModel, this::getOrLoadModel);
-                    if (newModel != null) {
-                        this.unbakedModels.put(modelId, newModel);
+                    LBGMetadata metadata = state.getMetadata(modelId);
+                    if (metadata != null) {
+                        UnbakedModel model = new LBGUnbakedModel(unbakedModel, metadata);
+                        this.unbakedModels.put(modelId, model);
                         this.modelsToLoad.addAll(unbakedModel.getModelDependencies());
                         ci.cancel();
                     }

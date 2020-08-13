@@ -12,21 +12,16 @@ package me.lambdaurora.lambdabettergrass.metadata;
 import com.google.gson.JsonObject;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import me.lambdaurora.lambdabettergrass.model.LBGBakedModel;
-import net.minecraft.client.render.model.BakedModel;
-import net.minecraft.client.render.model.UnbakedModel;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -36,26 +31,20 @@ import java.util.function.Function;
  * @version 1.0.0
  * @since 1.0.0
  */
-public class LBGMetadata
-{
+public class LBGMetadata {
     /**
      * Represents the identifier of the metadata.
      */
     public final Identifier id;
 
-    protected final @NotNull ResourceManager        resourceManager;
-    protected final          List<SpriteIdentifier> textures = new ArrayList<>();
+    protected final @NotNull ResourceManager resourceManager;
+    protected final List<SpriteIdentifier> textures = new ArrayList<>();
 
     private final List<LBGLayer> layers = new ArrayList<>();
 
     private int lastLayerIndex = 0;
 
-    protected UnbakedModel         snowyVariant              = null;
-    protected Consumer<BakedModel> snowyModelVariantProvider = null;
-    protected BakedModel           snowyModelVariant         = null;
-
-    public LBGMetadata(@NotNull ResourceManager resourceManager, @NotNull Identifier id, @NotNull JsonObject json)
-    {
+    public LBGMetadata(@NotNull ResourceManager resourceManager, @NotNull Identifier id, @NotNull JsonObject json) {
         this.id = id;
         this.resourceManager = resourceManager;
 
@@ -86,13 +75,11 @@ public class LBGMetadata
      *
      * @return The next layer index.
      */
-    protected int nextLayerIndex()
-    {
+    protected int nextLayerIndex() {
         return this.lastLayerIndex++;
     }
 
-    private void buildTextures()
-    {
+    private void buildTextures() {
         for (LBGLayer layer : this.layers)
             layer.buildTextures();
     }
@@ -102,8 +89,7 @@ public class LBGMetadata
      *
      * @param textureGetter The texture getter.
      */
-    public void bakeTextures(@NotNull Function<SpriteIdentifier, Sprite> textureGetter)
-    {
+    public void bakeTextures(@NotNull Function<SpriteIdentifier, Sprite> textureGetter) {
         for (LBGLayer layer : this.layers) {
             layer.bakeTextures(textureGetter);
         }
@@ -115,8 +101,7 @@ public class LBGMetadata
      * @param colorIndex The color index.
      * @return The optional layer.
      */
-    public @NotNull Optional<LBGLayer> getLayer(int colorIndex)
-    {
+    public @NotNull Optional<LBGLayer> getLayer(int colorIndex) {
         for (LBGLayer layer : this.layers) {
             if (layer.colorIndex == colorIndex)
                 return Optional.of(layer);
@@ -129,49 +114,14 @@ public class LBGMetadata
      *
      * @return The textures.
      */
-    public @NotNull Collection<SpriteIdentifier> getTextures()
-    {
+    public Collection<SpriteIdentifier> getTextures() {
         return this.textures;
     }
 
-    /**
-     * Returns the snowy variant of this.
-     *
-     * @return The snowy variant.
-     */
-    public @Nullable UnbakedModel getSnowyVariant()
-    {
-        return this.snowyVariant;
-    }
-
-    /**
-     * Returns the snowy model variant.
-     *
-     * @return The snowy model variant.
-     */
-    public @Nullable BakedModel getSnowyModelVariant()
-    {
-        return this.snowyModelVariant;
-    }
-
-    /**
-     * Propagates the baked model to other variants if applicable.
-     *
-     * @param model The model to propagate.
-     */
-    public void propagate(@NotNull LBGBakedModel model)
-    {
-        if (this.snowyModelVariantProvider != null)
-            this.snowyModelVariantProvider.accept(model);
-    }
-
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "LBGMetadata{" +
-                "id=" + this.id +
-                ", layers=" + this.layers +
-                ", snowyVariant=" + this.snowyVariant +
+                "id=" + id +
                 '}';
     }
 }

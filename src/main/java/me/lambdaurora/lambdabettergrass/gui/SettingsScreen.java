@@ -15,7 +15,6 @@ import me.lambdaurora.lambdabettergrass.LambdaBetterGrass;
 import me.lambdaurora.spruceui.SpruceLabelWidget;
 import me.lambdaurora.spruceui.SpruceTexts;
 import me.lambdaurora.spruceui.Tooltip;
-import me.lambdaurora.spruceui.option.SpruceBooleanOption;
 import me.lambdaurora.spruceui.option.SpruceCyclingOption;
 import me.lambdaurora.spruceui.option.SpruceResetOption;
 import net.fabricmc.api.EnvType;
@@ -41,21 +40,18 @@ import java.util.List;
  * @since 1.0.0
  */
 @Environment(EnvType.CLIENT)
-public class SettingsScreen extends Screen
-{
+public class SettingsScreen extends Screen {
     private static final String API_URL = "https://github.com/LambdAurora/LambdaBetterGrass/blob/mc1.16/API.md";
 
     private final LBGConfig config;
-    private final Screen    parent;
+    private final Screen parent;
 
     private final Option modeOption;
-    private final Option betterSnowOption;
     private final Option resetOption;
 
     private final List<SpruceLabelWidget> labels = new ArrayList<>();
 
-    public SettingsScreen(@Nullable Screen parent)
-    {
+    public SettingsScreen(@Nullable Screen parent) {
         super(new TranslatableText("lambdabettergrass.menu.title"));
         this.config = LambdaBetterGrass.get().config;
         this.parent = parent;
@@ -73,15 +69,6 @@ public class SettingsScreen extends Screen
                         LBGMode.FAST.getTranslatedText(),
                         LBGMode.FANCY.getTranslatedText()));
 
-        this.betterSnowOption = new SpruceBooleanOption("lambdabettergrass.option.better_layer",
-                this.config::hasBetterLayer,
-                betterSnow -> {
-                    this.config.setBetterLayer(betterSnow);
-                    if (this.client != null && this.client.worldRenderer != null)
-                        this.client.worldRenderer.reload();
-                },
-                new TranslatableText("lambdabettergrass.tooltip.better_layer"));
-
         this.resetOption = new SpruceResetOption(btn -> {
             this.config.reset();
             MinecraftClient client = MinecraftClient.getInstance();
@@ -90,13 +77,11 @@ public class SettingsScreen extends Screen
     }
 
     @Override
-    protected void init()
-    {
+    protected void init() {
         super.init();
         int buttonHeight = 20;
 
-        this.addButton(this.modeOption.createButton(this.client.options, this.width / 2 - 155, this.height / 4 - buttonHeight, 150));
-        this.addButton(this.betterSnowOption.createButton(this.client.options, this.width / 2 + 5, this.height / 4 - buttonHeight, 150));
+        this.addButton(this.modeOption.createButton(this.client.options, this.width / 2 - 75, this.height / 4 - buttonHeight, 150));
 
         this.buildLabels();
 
@@ -105,8 +90,7 @@ public class SettingsScreen extends Screen
                 (buttonWidget) -> this.client.openScreen(this.parent)));
     }
 
-    private void buildLabels()
-    {
+    private void buildLabels() {
         this.labels.clear();
 
         int y = this.height / 2;
@@ -126,8 +110,7 @@ public class SettingsScreen extends Screen
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta)
-    {
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         this.renderBackground(matrices);
         super.render(matrices, mouseX, mouseY, delta);
         this.drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 8, 16777215);
